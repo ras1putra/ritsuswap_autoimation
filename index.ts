@@ -46,8 +46,24 @@ async function performSwap(page: Page): Promise<void> {
 
     await delay(2000);
 
-    const inputPercentageSelector = "#swap-input > div.col.gap-12 > div.row2.gap-10.align > button:nth-child(3)";
+    const inputPercentageSelector = "#swap-input > div.col.gap-12 > div.row2.gap-10.align > button:nth-child(4)";
     await page.$eval(inputPercentageSelector, elem => (elem as HTMLElement).click());
+
+    await delay(2000);
+
+    await page.waitForSelector('input.swap-input');
+
+    const newValue = await page.$eval('input.swap-input', (input) => {
+      let currentValue = parseFloat(input.value);
+      let modifiedValue = currentValue - 0.0006;
+      input.value = modifiedValue.toFixed(8);
+      return modifiedValue;
+    });
+  
+    const newValueSwaap = await page.waitForSelector('input.swap-input');
+    await newValueSwaap?.type(String.fromCharCode(8)).then(
+        () => newValueSwaap?.type(newValue.toString())
+    )
 
     await delay(2000);
 
@@ -67,11 +83,11 @@ async function confirmOkxTransaction(browser: Browser): Promise<void> {
             const url = page.url();
             const isOkxNotification = url.includes(OKX_EXTENSION_ID) && url.includes('notification.html');
             
-            console.log('Checking page:', {
-                url,
-                isOkxNotification,
-                title: page.title()
-            });
+            // console.log('Checking page:', {
+            //     url,
+            //     isOkxNotification,
+            //     title: page.title()
+            // });
             
             return isOkxNotification;
         });
@@ -111,8 +127,14 @@ async function confirmOkxTransaction(browser: Browser): Promise<void> {
 
 async function waitForOkxTransactionSuccess(page: Page): Promise<void> {
     try {
-        await delay(60000);
-        console.log("Transaction success element is visible.");
+        let currentWaitTime = 120000;
+        const maxWaitTime = 300000;
+        const minWaitTime = 120000;
+
+        currentWaitTime = Math.floor(Math.random() * (maxWaitTime - minWaitTime + 1)) + minWaitTime;
+
+        console.log('Waiting for OKX transaction success for', currentWaitTime / 1000, 's');
+        await delay(currentWaitTime);
 
         const randomX = Math.floor(Math.random() * 100) + 1;
         const randomY = Math.floor(Math.random() * 100) + 1;
